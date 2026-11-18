@@ -8,3 +8,4 @@
 .bob-remote/
 __pycache__/
 *.pyc
+.env
