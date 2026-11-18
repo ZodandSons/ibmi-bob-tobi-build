@@ -1,0 +1,22 @@
+     A* ORDDSP - Order inquiry display file
+     A* FIX-LOOP DEMO: this member contains deliberate compile errors.
+     A* See demo/fix-loop/README.md.
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      INDARA
+     A                                      CA03(03 'Exit')
+     A          R ORDSCR
+     A                                  1  2'ORDINQ'
+     A                                  1 30'Order Inquiry'
+     A                                      DSPATR(HJ)
+     A                                  3  2'Order number . :'
+     A            ORDNO          7Y 0B  3 20EDTCDE(Z)
+     A                                  5  2'Customer . . . :'
+     A            ORDCUST       30A  O  5 20
+     A                                  6  2'Amount . . . . :'
+     A            ORDAMT         9Y 2O  6 20EDTCDE(J)
+     A                                  7  2'Status . . . . :'
+     A            ORDSTS        10A  O  7 20
+     A            MSGTXT        60A  O 22  2DSPATR(HI)
+     A                                 23  2'F3=Exit'
+     A                                      COLR(BLU)

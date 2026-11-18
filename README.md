@@ -56,6 +56,7 @@ flowchart LR
 | Settings | `.bob/ibmi-build.conf` (from `.example`) | Host, user, IFS folder, object library, **`IBMI_MAX_FIX_ATTEMPTS`**. |
 | Sample app | `qddssrc/`, `qrpglesrc/`, `qrpgleref/`, `qclsrc/` | DSPF + RPGLE + copybook + CLLE, wired together with `Rules.mk`. |
 | Demo | `demo/break-build.patch` | Adds one RPG error and one CL error so you can watch the fix loop. |
+| Demo | `demo/fix-loop/` | ORDDSP display file + ORDINQ program with deliberate DDS and RPG errors (a two-round fix loop). |
 | Tests | `tests/run_tests.sh` | Offline end-to-end tests against a fake IBM i. |
 
 **Script exit codes**, which the skill branches on:

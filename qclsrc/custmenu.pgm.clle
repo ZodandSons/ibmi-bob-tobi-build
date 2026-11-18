@@ -9,7 +9,8 @@
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
 
              RTVJOBA    USER(&USER)
-             SNDPGMMSG  MSG('Customer inquiry started by' *BCAT &USER) +
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Customer inquiry started by' *BCAT &USER) +
                           TOPGMQ(*EXT) MSGTYPE(*STATUS)
              CALL       PGM(CUSTINQ)
              RETURN

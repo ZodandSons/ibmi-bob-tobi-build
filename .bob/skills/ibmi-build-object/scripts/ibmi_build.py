@@ -512,7 +512,9 @@ def remote_script(cfg, targets):
         d = f"{REMOTE_WORK}/logs/{i}"
         lines += [
             f"echo '@@BOB_BEGIN {i}' >&2",
-            f"{q(cfg['IBMI_MAKEI'])} compile -f {src} > {d}.out 2>&1",
+            # </dev/null is essential: the script itself arrives on stdin (bash -s), and
+            # makei/make would otherwise consume the rest of it, silently ending the run.
+            f"{q(cfg['IBMI_MAKEI'])} compile -f {src} < /dev/null > {d}.out 2>&1",
             "rc=$?",
             f"[ -f .logs/joblog.json ] && cp .logs/joblog.json {d}.joblog.json",
             f"[ -f .logs/output.log ] && cp .logs/output.log {d}.output.log",
@@ -721,6 +723,8 @@ def write_reports(root, cfg, state, targets, scope, notes, skipped):
         if len(t["errors"]) > 25:
             out.append(f"      ... {len(t['errors']) - 25} more (see .bob/build/last-build.json)")
         if t["status"] == "failed" and not t["errors"]:
+            if t.get("note"):
+                out.append(f"      {t['note']}")
             for m in t["joblog_messages"][:10]:
                 out.append(f"      joblog {m['msgid']} sev{m['severity']:02d} {m['text']}")
             if t["output_tail"]:

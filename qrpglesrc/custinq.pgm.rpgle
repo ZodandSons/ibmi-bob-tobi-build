@@ -9,11 +9,11 @@ ctl-opt dftactgrp(*no) actgrp(*caller) option(*srcstmt: *nodebugio);
 
 /copy 'qrpgleref/custconst.rpgleinc'
 
+dcl-f CUSTDSP workstn indds(dspInd);
+
 dcl-ds dspInd qualified;
   exit ind pos(3);
 end-ds;
-
-dcl-f CUSTDSP workstn indds(dspInd);
 
 MSGTXT = 'Enter a customer number (try 1001, 1002 or 1003).';
 
