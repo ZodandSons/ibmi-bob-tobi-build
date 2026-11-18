@@ -1,0 +1,8 @@
+**free
+// ---------------------------------------------------------------------------
+// CUSTCONST - customer status constants shared by customer programs
+// Changing this copybook makes /ibmi-build-object --changed recompile every
+// source that /COPYs it.
+// ---------------------------------------------------------------------------
+dcl-c STATUS_ACTIVE 'ACTIVE';
+dcl-c STATUS_HOLD 'ON HOLD';

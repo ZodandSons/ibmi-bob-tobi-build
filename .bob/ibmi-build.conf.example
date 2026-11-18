@@ -1,0 +1,37 @@
+# ---------------------------------------------------------------------------
+# IBM Bob + TOBi build settings. Copy to .bob/ibmi-build.conf (git-ignored)
+# and edit. Every value can also be overridden by an environment variable of
+# the same name (useful in CI).
+# ---------------------------------------------------------------------------
+
+# IBM i connection (SSH key authentication - passwords are never stored here)
+IBMI_HOST=myibmi.example.com
+IBMI_USER=DEVUSER
+# IBMI_SSH_PORT=22
+# IBMI_SSH_KEY=~/.ssh/id_ed25519
+
+# IFS folder the project is synced to and built from. One per developer/project.
+IBMI_REMOTE_DIR=/home/DEVUSER/builds/ibmi-bob-tobi-build
+
+# Library that receives the compiled objects (substituted for &OBJLIB in iproj.json)
+IBMI_OBJLIB=DEVUSERLIB
+
+# How many times Bob may try to fix compile errors after the first compile.
+# 3 means: 1 initial compile + up to 3 fix-and-recompile cycles.
+IBMI_MAX_FIX_ATTEMPTS=3
+
+# CCSID to tag synced stream files with (blank = leave as created)
+IBMI_SETCCSID=1208
+
+# Paths on the IBM i (defaults shown)
+# IBMI_MAKEI=/QOpenSys/pkgs/bin/makei
+# IBMI_REMOTE_SHELL=/QOpenSys/pkgs/bin/bash
+
+# Which source types are compiled, which are copybooks, which create *FILE objects
+# IBMI_SOURCE_EXTS=.rpgle,.sqlrpgle,.clle,.dspf
+# IBMI_INCLUDE_EXTS=.rpgleinc,.sqlrpgleinc
+# IBMI_FILE_OBJECT_EXTS=.dspf,.prtf,.pf,.lf
+
+# Compiler message severities: >= ERROR is an error, >= WARNING is a warning
+# IBMI_ERROR_SEVERITY=20
+# IBMI_WARNING_SEVERITY=10

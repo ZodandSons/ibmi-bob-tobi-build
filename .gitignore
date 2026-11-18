@@ -1,0 +1,10 @@
+# Per-developer connection settings (copy from .bob/ibmi-build.conf.example)
+.bob/ibmi-build.conf
+# Build results, attempt counter and sync manifest written by ibmi_build.py
+.bob/build/
+# TOBi output folders (if you ever build in a local clone on the IBM i)
+.logs/
+.evfevent/
+.bob-remote/
+__pycache__/
+*.pyc

@@ -1,0 +1,24 @@
+diff --git a/qclsrc/custmenu.pgm.clle b/qclsrc/custmenu.pgm.clle
+index dc6060b..3b58c13 100644
+--- a/qclsrc/custmenu.pgm.clle
++++ b/qclsrc/custmenu.pgm.clle
+@@ -16,5 +16,5 @@
+ 
+  ERROR:      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                           MSGDTA('CUSTINQ ended in error. See the job log.') +
+-                          MSGTYPE(*ESCAPE)
++                          MSGTYP(*ESCAPE)
+              ENDPGM
+diff --git a/qrpglesrc/custinq.pgm.rpgle b/qrpglesrc/custinq.pgm.rpgle
+index 4fbe92f..5a90a9b 100644
+--- a/qrpglesrc/custinq.pgm.rpgle
++++ b/qrpglesrc/custinq.pgm.rpgle
+@@ -41,7 +41,7 @@ dcl-proc lookupCustomer;
+       CUSTNAME = 'Acme Manufacturing';
+       CUSTSTS = STATUS_ACTIVE;
+     when custNumber = 1002;
+-      CUSTNAME = 'Bluewater Logistics';
++      CUSTNAM = 'Bluewater Logistics';
+       CUSTSTS = STATUS_HOLD;
+     when custNumber = 1003;
+       CUSTNAME = 'Cedar Ridge Foods';

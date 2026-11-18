@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "description": "IBM Bob + TOBi automated build example (RPGLE, CLLE, DDS display file)",
+  "objlib": "&OBJLIB",
+  "curlib": "&OBJLIB",
+  "includePath": ["qrpgleref"],
+  "preUsrlibl": [],
+  "postUsrlibl": []
+}

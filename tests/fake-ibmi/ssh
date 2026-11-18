@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Fake ssh for offline tests: drops ssh options and the user@host argument,
+# then runs the remote command locally. The "IFS" is just a local folder.
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -p|-i|-o|-l|-F|-J) shift 2 ;;
+    -*) shift ;;
+    *) break ;;
+  esac
+done
+shift   # user@host
+exec bash -c "$*"

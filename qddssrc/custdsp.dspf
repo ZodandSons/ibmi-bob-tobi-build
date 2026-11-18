@@ -1,0 +1,19 @@
+     A* CUSTDSP - Customer inquiry display file
+     A* Sample source for the IBM Bob + TOBi automated build loop
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      INDARA
+     A                                      CA03(03 'Exit')
+     A          R CUSTSCR
+     A                                  1  2'CUSTINQ'
+     A                                  1 30'Customer Inquiry'
+     A                                      DSPATR(HI)
+     A                                  3  2'Customer number:'
+     A            CUSTNO         7Y 0B  3 20EDTCDE(Z)
+     A                                  5  2'Name . . . . . :'
+     A            CUSTNAME      30A  O  5 20
+     A                                  6  2'Status . . . . :'
+     A            CUSTSTS       10A  O  6 20
+     A            MSGTXT        60A  O 22  2DSPATR(HI)
+     A                                 23  2'F3=Exit'
+     A                                      COLOR(BLU)

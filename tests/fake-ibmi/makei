@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Fake TOBi makei for offline tests. Supports `makei -v` and `makei compile -f <file>`.
+# Simulates two real compile errors so the fix loop can be exercised:
+#   RPGLE: a word "CUSTNAM" (typo for CUSTNAME)      -> RNF7030 sev 30
+#   CLLE : a keyword "MSGTYP(" (typo for MSGTYPE)    -> CPD0043 sev 30
+if [ "$1" = "-v" ]; then echo "TOBi (fake) 0.0.0"; exit 0; fi
+if [ "$1" != "compile" ] || [ "$2" != "-f" ] || [ -z "$3" ]; then echo "fake makei: unsupported: $*"; exit 1; fi
+f="$3"
+[ -f "$f" ] || { echo "make: *** No rule to make target '$f'"; exit 2; }
+mkdir -p .logs .evfevent
+base=$(basename "$f"); OBJ=$(echo "${base%%.*}" | tr '[:lower:]' '[:upper:]')
+abs="$PWD/$f"; total=$(wc -l < "$f" | tr -d ' ')
+echo "Building $OBJ from $f into library ${OBJLIB:-?}"
+case "$f" in
+  *.rpgle|*.sqlrpgle) pat='CUSTNAM'; flag=-w; id=RNF7030; txt='The name or indicator CUSTNAM is not defined.' ;;
+  *.clle)             pat='MSGTYP('; flag=-F; id=CPD0043; txt='Keyword MSGTYP not valid for this command.' ;;
+  *)                  pat='';        flag=;   id=; txt= ;;
+esac
+ln=""
+[ -n "$pat" ] && ln=$(grep -n $flag -- "$pat" "$f" | head -1 | cut -d: -f1)
+{
+  echo "TIMESTAMP 0 20261118103000"
+  echo "PROCESSOR 0 000 1"
+  printf 'FILEID 0 001 000000 %03d %s 20261118103000 0\n' "${#abs}" "$abs"
+  if [ -n "$ln" ]; then
+    col=$(sed -n "${ln}p" "$f" | awk -v p="$pat" '{print index($0,p)}')
+    printf 'ERROR 0 001 1 %06d %06d %03d %06d %03d %s S 30 %03d %s\n' "$ln" "$ln" "$col" "$ln" "$col" "$id" "${#txt}" "$txt"
+  fi
+  printf 'FILEEND 0 001 %06d\n' "$total"
+} > ".evfevent/$OBJ.evfevent"
+if [ -n "$ln" ]; then
+  echo "{\"messages\":[{\"msgid\":\"CPF9898\",\"severity\":40,\"text\":\"Compile of $OBJ failed.\"}]}" > .logs/joblog.json
+  echo "*** Compile of $OBJ failed"; exit 2
+fi
+echo '{"messages":[]}' > .logs/joblog.json
+echo "$OBJ created in ${OBJLIB}"; exit 0
