@@ -96,7 +96,7 @@ Use **ACS → Tools → Open Source Package Management** (point and click), or f
 
 ```bash
 /QOpenSys/pkgs/bin/yum install tobi
-# TOBi pulls in its dependencies (bash, make-gnu, python3, python3-ibm_db, coreutils-gnu, ...)
+# TOBi pulls in its dependencies (bash, make-gnu, python, python-ibm_db, coreutils-gnu, ...)
 # If your repository still has the older package name, install `bob` instead. The command is still `makei`.
 ```
 
@@ -177,7 +177,7 @@ IBMI_MAX_FIX_ATTEMPTS=3        # 1 initial compile + up to 3 fix-and-recompile c
 **B3. Check the whole chain**
 
 ```bash
-python3 .bob/skills/ibmi-build-object/scripts/ibmi_build.py check
+python .bob/skills/ibmi-build-object/scripts/ibmi_build.py check
 ```
 
 Expected output:
@@ -193,7 +193,7 @@ Result       : ready
 **B4. First manual compile** (proves that TOBi, the library list and CCSIDs work before AI is involved)
 
 ```bash
-python3 .bob/skills/ibmi-build-object/scripts/ibmi_build.py compile \
+python .bob/skills/ibmi-build-object/scripts/ibmi_build.py compile \
   qddssrc/custdsp.dspf qrpglesrc/custinq.pgm.rpgle qclsrc/custmenu.pgm.clle --new-run
 ```
 
@@ -209,12 +209,12 @@ You should see three `[OK]` lines, and `CUSTDSP *FILE`, `CUSTINQ *PGM` and `CUST
 - `.bob/skills/ibmi-build-object/` → the skill
 - `.bob/rules/ibmi-build-guardrails.md` → always-on rules
 
-**C2. Use a mode that can use skills** (Bob's *Advanced* mode), and type `/` in the chat. You should see `ibmi-build-object` in the menu.
+**C2. Use a mode that can use skills** (Bob's *Agent* mode), and type `/` in the chat. You should see `ibmi-build-object` in the menu.
 
 **C3. (Optional) Reduce approval prompts**
 
 - Skill activation: add `"skill"` to `approval.allowed_permissions` in `~/.bob/settings/settings.json`.
-- Command execution: in Bob's auto-approve settings, allow commands starting with `python3 .bob/skills/ibmi-build-object/scripts/ibmi_build.py`. Keep the allow-list narrow and leave other commands on "ask".
+- Command execution: in Bob's auto-approve settings, allow commands starting with `python .bob/skills/ibmi-build-object/scripts/ibmi_build.py`. Keep the allow-list narrow and leave other commands on "ask".
 
 **C4. Try it**
 
@@ -271,7 +271,7 @@ The script works out the file list from git, keeps compilable types (`IBMI_SOURC
 Preview without compiling:
 
 ```bash
-python3 .bob/skills/ibmi-build-object/scripts/ibmi_build.py changed --commit HEAD --dry-run
+python .bob/skills/ibmi-build-object/scripts/ibmi_build.py changed --commit HEAD --dry-run
 ```
 
 > For `--commit` of an older commit, the *list* of files comes from that commit, but the *content* compiled is your current working tree, because that's where Bob makes fixes. The script prints a note when the commit isn't `HEAD`.
@@ -347,7 +347,7 @@ Every setting can be overridden with an environment variable of the same name, w
 | SQLRPGLE line numbers look off | They refer to the precompiler's generated source. The report flags these, and the skill matches on statement text. |
 | Files deleted locally still exist on the IBM i | The sync only adds or updates files. Run `--full-sync` after big reorganisations, or clean the IFS folder. |
 | Slow first sync | Later syncs send only changed files. To reuse SSH connections, add `ControlMaster auto` / `ControlPersist 10m` for the host in `~/.ssh/config`. |
-| Windows: `python3` not found | Use `python`, or edit the command paths in `SKILL.md`. Git for Windows' bash works for the tests and hook. |
+| Windows: `python` not found | Use `python`, or edit the command paths in `SKILL.md`. Git for Windows' bash works for the tests and hook. |
 
 ---
 
