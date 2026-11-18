@@ -151,14 +151,14 @@ ssh -o BatchMode=yes DEVUSER@myibmi.example.com 'echo connected'
 
 ### Part B: on your workstation
 
-**B1. Get the repo**
+**B1. Get the repo** — in a bash terminal on your workstation:
 
 ```bash
 git clone <this-repo-url> ibmi-bob-tobi-build
 cd ibmi-bob-tobi-build
 ```
 
-**B2. Create your personal settings** (git-ignored)
+**B2. Create your personal settings** (git-ignored) — in a bash terminal, from the repo root:
 
 ```bash
 cp .bob/ibmi-build.conf.example .bob/ibmi-build.conf
@@ -174,7 +174,7 @@ IBMI_OBJLIB=DEVUSERLIB
 IBMI_MAX_FIX_ATTEMPTS=3        # 1 initial compile + up to 3 fix-and-recompile cycles
 ```
 
-**B3. Check the whole chain**
+**B3. Check the whole chain** — in a bash terminal, from the repo root:
 
 ```bash
 python .bob/skills/ibmi-build-object/scripts/ibmi_build.py check
@@ -190,7 +190,7 @@ setccsid: found
 Result       : ready
 ```
 
-**B4. First manual compile** (proves that TOBi, the library list and CCSIDs work before AI is involved)
+**B4. First manual compile** — in a bash terminal, from the repo root (proves that TOBi, the library list and CCSIDs work before AI is involved):
 
 ```bash
 python .bob/skills/ibmi-build-object/scripts/ibmi_build.py compile \
@@ -216,7 +216,7 @@ You should see three `[OK]` lines, and `CUSTDSP *FILE`, `CUSTINQ *PGM` and `CUST
 - Skill activation: add `"skill"` to `approval.allowed_permissions` in `~/.bob/settings/settings.json`.
 - Command execution: in Bob's auto-approve settings, allow commands starting with `python .bob/skills/ibmi-build-object/scripts/ibmi_build.py`. Keep the allow-list narrow and leave other commands on "ask".
 
-**C4. Try it**
+**C4. Try it** — in the Bob IDE chat or Bob Shell prompt (Agent mode):
 
 ```text
 /ibmi-build-object qrpglesrc/custinq.pgm.rpgle
@@ -224,11 +224,13 @@ You should see three `[OK]` lines, and `CUSTDSP *FILE`, `CUSTINQ *PGM` and `CUST
 
 ### Part D: watch the fix loop
 
+**In a bash terminal on your workstation**, from the repo root (`ibmi-bob-tobi-build/`):
+
 ```bash
 git apply demo/break-build.patch      # adds a typo'd RPG field and a typo'd CL keyword
 ```
 
-Then in Bob:
+This only modifies local source files — it does not touch the IBM i. Then **in Bob** (IDE or Shell, the same session from Part C):
 
 ```text
 /ibmi-build-object --changed
