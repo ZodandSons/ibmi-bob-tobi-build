@@ -19,7 +19,7 @@ Before Bob can safely take on bigger IBM i work (modernizing RPG, refactoring, w
 | What it gives you | Why it matters |
 |---|---|
 | **Ground truth from your IBM i.** A real TOBi compile against your libraries, not the AI's guess. | Every later automation (refactors, code generation, PR checks) can use "it compiles on our box" as its pass/fail signal. |
-| **A bounded, auditable loop.** A script enforces the attempt limit, and every fix is logged. | Bob can't loop forever, hide errors, or "fix" by deleting code. Reviewers see exactly what changed. |
+| **A bounded, auditable loop.** A script enforces the attempt limit, and every fix is logged. | Bob can't loop forever, and its rules forbid hiding errors or "fixing" by deleting code. Reviewers see exactly what changed. |
 | **Low risk.** Builds go into a per-developer library, and fixes stay uncommitted. | Nothing touches production, and nothing is committed without a human. |
 | **Deterministic plumbing.** Sync, compile, error parsing and change detection are plain Python. | The AI only does the judgement part, so results are repeatable and easy to debug. |
 
@@ -68,6 +68,54 @@ flowchart LR
 | 2 | Environment or configuration problem. Bob must not edit source. |
 | 3 | Fix-attempt limit reached. Bob stops and reports. |
 | 4 | Nothing to compile |
+
+---
+
+## Deterministic plumbing, AI judgement
+
+The skill is split in two: **a deterministic script does every build step, and the AI only does the parts that need judgement.**
+
+**The deterministic part** is `ibmi_build.py`. Given the same repo state and config, it always does the same thing:
+
+1. **Chooses what to compile** from git, and adds dependents without being asked: programs that use a changed display file, and sources that `/COPY` a changed copybook.
+2. **Syncs only the files that changed**, comparing SHA-1 hashes against a manifest.
+3. **Runs TOBi `makei compile`** on the IBM i for each target.
+4. **Turns the compiler output into structured data.** It parses the `.evfevent` files into `file:line:col MSGID severity text` errors in `.bob/build/last-build.json`. For failed targets it also keeps the severe job-log messages and the tail of the `makei` output, and it writes an exact `retry_command`.
+5. **Enforces the attempt limit.** `.bob/build/state.json` counts compiles, and once `1 + IBMI_MAX_FIX_ATTEMPTS` have been used the script refuses to compile.
+6. **Returns an exit code** (see the table above) that Bob has to branch on.
+
+**The judgement part** is `SKILL.md`. Bob reads `last-build.json`, opens the file at the failing line, checks the error playbook for the message ID, makes the smallest correct fix (first error in each file first), logs it to `.bob/build/fix-log.md`, and reruns the exact `retry_command`.
+
+**The guardrails** (`.bob/rules/ibmi-build-guardrails.md`, repeated in `SKILL.md`) forbid Bob from "passing" by cheating. It may not lower `GENLVL`, edit `Rules.mk`, `iproj.json` or compile options, delete, comment out or stub business logic, guess at business meaning, reset the attempt counter, or commit anything. Missing objects, authority errors and locks are treated as environment problems, not code problems.
+
+The rules also tell Bob never to run `makei`, `ssh` or CL commands itself. Anything that has to be repeatable and auditable lives in the script, which decides what "green" means. The attempt limit is enforced by the script itself; the other guardrails are instructions to Bob, so keep Bob's command auto-approval narrow (see Part C3) and review its fixes with `git diff`.
+
+---
+
+## How this relates to the 3 levels of AI integration in testing
+
+The IBM Redbook [*Modernizing IBM i Applications* (2026)](https://www.redbooks.ibm.com/docs/MD260020/MD260020-17.html#test-driven-development-with-automation) defines a maturity model for IBM i testing in three dimensions: **7 levels of automation**, **3 levels of operability** and **3 levels of AI integration**. Most tools stop at level 3 or 4 of automation. The three levels of AI integration are:
+
+1. **Testing gives metadata to AI.** Coverage, execution flows, logs and KPIs feed AI with the real behavior of your applications.
+2. **AI drives testing.** AI sets test priorities, detects UI changes and predicts defects from test history.
+3. **Autonomous testing (AI + MCP).** AI agents call a test tool through MCP to validate the code they generate, and get a deterministic YES or NO before production.
+
+The `ibmi-build-object` skill (`.bob/skills/ibmi-build-object/`, run with `/ibmi-build-object`) addresses **Level 1 only**, and only partly:
+
+| Level | Where this skill stands | What it would take |
+|---|---|---|
+| **1. Testing gives metadata to AI** | **Partly addressed, with compile-time data.** The script turns raw compiler output (EVFEVENT records, job log messages, `makei` output) into machine-readable facts. It flags SQL-precompiler line numbers that point at generated source, and keeps a per-run history in `state.json`; Bob adds a fix log in `fix-log.md`. Bob works from real tool output, not guesses. | The data is *static* (does it compile?), not *runtime* behavior. Full Level 1 needs coverage, execution flows, application logs and KPIs from actually running the programs. |
+| **2. AI drives testing** | **Not addressed.** No tests run. Bob chooses what to compile and how to triage compile errors, but it doesn't set test priorities, detect UI changes or predict defects. | A test suite for Bob to prioritise. The history in `state.json` and `fix-log.md` already records which sources and message IDs fail repeatedly, and could be one input for predicting defects. |
+| **3. Autonomous testing (AI + MCP)** | **Not addressed.** Bob does get a deterministic verdict it can't overrule (the script's exit code), but that verdict means "it compiled", not "it passed testing", and it isn't called over MCP. | A behavioral check after a successful compile, for example regression tests with ReplicTest called over MCP through the AI Production Gate. The script's contract (fixed inputs, exit codes, a JSON report) is already MCP-shaped and easy to wrap. |
+
+**Bottom line:** this skill is a deterministic compile gate with an AI fixer inside fixed limits. It gives Bob trustworthy compile metadata (partial Level 1) and answers only one question: "does it build?" Building is a prerequisite for testing, not a substitute for it. Levels 2 and 3 need real tests on top, so that the final YES/NO before production covers *builds **and** behaves as before*.
+
+### Further reading
+
+- [Modernizing IBM i Applications (IBM Redbook, 2026)](https://www.redbooks.ibm.com/docs/MD260020/MD260020-17.html#test-driven-development-with-automation): the testing maturity model (automation, operability, AI integration)
+- [Seven levels of test automation on IBM i (TechChannel)](https://techchannel.com/ai/seven-levels-of-test-automation-ibm-i/), Pascal Polverini, November 12, 2026
+- [AI Production Gate (Polverini & Partners)](https://www.polverinipartners.com/ai-production-gate/)
+- [ReplicTest (Polverini & Partners)](https://www.polverinipartners.com/replictest/)
 
 ---
 
@@ -180,7 +228,7 @@ IBMI_MAX_FIX_ATTEMPTS=3        # 1 initial compile + up to 3 fix-and-recompile c
 python .bob/skills/ibmi-build-object/scripts/ibmi_build.py check
 ```
 
-Expected output:
+Expected output (it also prints the project root, config path, target, remote shell and `makei` version first):
 
 ```text
 makei: found
@@ -318,14 +366,16 @@ The hook compiles everything changed since the upstream branch with `--max-fix-a
 |---|---|---|
 | `IBMI_HOST`, `IBMI_USER` | — | SSH target (key-based login) |
 | `IBMI_SSH_PORT`, `IBMI_SSH_KEY` | — | Optional SSH port / identity file |
+| `IBMI_SSH_CMD` | `ssh` | SSH client to run |
 | `IBMI_SSH_OPTS` | `-o BatchMode=yes -o ConnectTimeout=20` | Never hang on a password prompt |
+| `IBMI_SSH_TIMEOUT` | `1800` | Seconds before an SSH call (sync or compile) is abandoned |
 | `IBMI_REMOTE_DIR` | — | IFS build folder (one per developer per project) |
 | `IBMI_OBJLIB` | — | Library for compiled objects (`&OBJLIB` in `iproj.json`) |
 | `IBMI_MAX_FIX_ATTEMPTS` | `3` | Fix-and-recompile cycles allowed after the first compile |
 | `IBMI_SETCCSID` | `1208` | CCSID tag for synced files (blank = skip) |
 | `IBMI_MAKEI` | `/QOpenSys/pkgs/bin/makei` | TOBi CLI path |
 | `IBMI_REMOTE_SHELL` | `/QOpenSys/pkgs/bin/bash` | Shell used for the remote build script |
-| `IBMI_SOURCE_EXTS` | `.rpgle,.sqlrpgle,.clle,.dspf` | Compilable types (add `.prtf`, `.sqlrpgle`, `.rpgle` modules, and so on) |
+| `IBMI_SOURCE_EXTS` | `.rpgle,.sqlrpgle,.clle,.dspf` | Compilable types (add `.prtf`, `.pf`, `.lf`, and so on) |
 | `IBMI_INCLUDE_EXTS` | `.rpgleinc,.sqlrpgleinc` | Copybook types (trigger dependent recompiles) |
 | `IBMI_FILE_OBJECT_EXTS` | `.dspf,.prtf,.pf,.lf` | Types that create `*FILE` objects (trigger dependent recompiles) |
 | `IBMI_ERROR_SEVERITY` / `IBMI_WARNING_SEVERITY` | `20` / `10` | Message severity thresholds |
@@ -349,7 +399,7 @@ Every setting can be overridden with an environment variable of the same name, w
 | SQLRPGLE line numbers look off | They refer to the precompiler's generated source. The report flags these, and the skill matches on statement text. |
 | Files deleted locally still exist on the IBM i | The sync only adds or updates files. Run `--full-sync` after big reorganisations, or clean the IFS folder. |
 | Slow first sync | Later syncs send only changed files. To reuse SSH connections, add `ControlMaster auto` / `ControlPersist 10m` for the host in `~/.ssh/config`. |
-| Windows: `python` not found | Use `python`, or edit the command paths in `SKILL.md`. Git for Windows' bash works for the tests and hook. |
+| Windows: `python3` not found | `SKILL.md`, the guardrails, `tests/run_tests.sh` and the script's `retry_command` use `python3`. Use `python` instead (`SKILL.md` already allows this), or edit those command paths. Git for Windows' bash works for the hook. |
 
 ---
 
