@@ -100,7 +100,9 @@ The IBM Redbook [*Modernizing IBM i Applications* (2026)](https://www.redbooks.i
 2. **AI drives testing.** AI sets test priorities, detects UI changes and predicts defects from test history.
 3. **Autonomous testing (AI + MCP).** AI agents call a test tool through MCP to validate the code they generate, and get a deterministic YES or NO before production.
 
-The `ibmi-build-object` skill (`.bob/skills/ibmi-build-object/`, run with `/ibmi-build-object`) addresses **Level 1 only**, and only partly:
+The `ibmi-build-object` skill (`.bob/skills/ibmi-build-object/`, run with `/ibmi-build-object`) addresses only **Level 1 of the 3 levels of AI integration**, and only partly:
+
+> **Note:** This means we are only at the first step of AI integration in testing.
 
 | Level | Where this skill stands | What it would take |
 |---|---|---|
